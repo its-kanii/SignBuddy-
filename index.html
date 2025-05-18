@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sign Language Translator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #83a4d4, #b6fbff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      width: 95%;
+      max-width: 550px;
+      transition: transform 0.3s ease;
+    }
+
+    .container:hover {
+      transform: scale(1.01);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      margin-bottom: 18px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      transition: border 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+    }
+
+    .translate-btn {
+      background: #2b6777;
+      color: white;
+    }
+
+    .mic-btn {
+      background: #ff6b6b;
+      color: white;
+      position: relative;
+    }
+
+    .mic-btn.listening::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+    }
+
+    video {
+      width: 100%;
+      margin-top: 16px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    #signDisplay {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🌻 SignBuddy</h2>
+    <input id="wordInput" placeholder="Type or speak a word..." />
+    <div class="btn-group">
+      <button class="translate-btn" onclick="showSign()">🔁 Translate</button>
+      <button class="mic-btn" id="micBtn" onclick="startListening()">🎤 Speak</button>
+    </div>
+    <p id="status"></p>
+    <div id="signDisplay"></div>
+  </div>
+
+  <script>
+    const signs = {
+      "bye": "Bye.mp4",
+      "cheer": "Cheer.mp4",
+      "deaf": "Deaf.mp4",
+      "hearing": "Hearing.mp4",
+      "hellowelcome": "HelloWelcome.mp4",
+      "hello": "Hello.mp4",
+      "how question": "How question.mp4",
+      "how are you": "How are you.mp4",
+      "how": "How.mp4",
+      "i am hearing": "I am hearing.mp4",
+      "me": "Me.mp4",
+      "no": "No.mp4",
+      "slow down": "Slow down.mp4",
+      "super high five": "Super high five.mp4",
+      "welcome": "Welcome.mp4",
+      "welcome left hand": "Welcome left hand.mp4",
+      "welcome right hand": "Welcome right hand.mp4",
+      "yes": "Yes.mp4",
+      "you": "You.mp4",
+      "fine": "Fine.mp4",
+      "baby": "Baby.mp4",
+      "glass": "Glass.mp4",
+      "book": "Book.mp4",
+      "monkey": "Monkey.mp4",
+      "tree": "Tree.mp4",
+      "car": "Car.mp4",
+      "house": "House.mp4",
+      "swim": "Swim.mp4",
+      "hello how are you": "Hello how are you.mp4"
+    };
+
+    function showSign() {
+      const word = document.getElementById("wordInput").value.trim().toLowerCase();
+      const signDisplay = document.getElementById("signDisplay");
+      const status = document.getElementById("status");
+
+      if (signs[word]) {
+        signDisplay.innerHTML = `
+          <video controls autoplay>
+            <source src="signs/${signs[word]}" type="video/mp4">
+            Your browser does not support video playback.
+          </video>
+        `;
+        status.textContent = "";
+      } else {
+        signDisplay.innerHTML = "";
+        status.textContent = `❌ No sign language video found for "${word}".`;
+      }
+    }
+
+    function startListening() {
+      const micBtn = document.getElementById("micBtn");
+      const status = document.getElementById("status");
+
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Speech recognition not supported. Use Chrome.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      micBtn.classList.add("listening");
+      status.textContent = "🎙️ Listening...";
+
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        document.getElementById("wordInput").value = transcript;
+        status.textContent = `✅ Heard: "${transcript}"`;
+        showSign();
+        micBtn.classList.remove("listening");
+      };
+
+      recognition.onerror = function (event) {
+        status.textContent = "❌ Error: " + event.error;
+        micBtn.classList.remove("listening");
+      };
+
+      recognition.onspeechend = function () {
+        recognition.stop();
+        micBtn.classList.remove("listening");
+      };
+
+      recognition.start();
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
